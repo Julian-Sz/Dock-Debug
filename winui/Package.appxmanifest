@@ -3,7 +3,8 @@
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
          IgnorableNamespaces="uap rescap">
-  <Identity Name="DockDebug" Publisher="CN=Dock-Debug" Version="1.0.0.0" />
+  <!-- Identity reserved in Partner Center (Store ID 9MSPPCP4HLL5); must match it exactly. -->
+  <Identity Name="Dock-Debug.Dock-Debug" Publisher="CN=81EC61C3-7410-419F-8D64-9BE934A7F4CD" Version="1.0.0.0" />
   <Properties>
     <DisplayName>Dock-Debug</DisplayName>
     <PublisherDisplayName>Dock-Debug</PublisherDisplayName>
@@ -15,7 +16,7 @@
   <Resources><Resource Language="x-generate" /></Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
-      <uap:VisualElements DisplayName="Dock-Debug" Description="Thunderbolt and USB dock diagnostics"
+      <uap:VisualElements DisplayName="Dock-Debug" Description="Dock, USB and display diagnostics"
                           BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png"
                           Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />

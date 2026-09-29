@@ -1,6 +1,8 @@
 #include "report.h"
 
 #include <windows.h>
+#include <knownfolders.h>
+#include <shlobj.h>
 
 #include <algorithm>
 #include <cwchar>
@@ -12,6 +14,8 @@
 #include <vector>
 
 #pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "shell32.lib")
 
 std::wstring Lower(std::wstring value) {
     std::transform(value.begin(), value.end(), value.begin(), [](wchar_t character) {
@@ -81,12 +85,18 @@ std::wstring UsbSignature(const HardwareSnapshot& snapshot) {
     return output.str();
 }
 
+// Documents\Dock-Debug\tracking. Not %LOCALAPPDATA%: in the MSIX package, writes there are redirected to a
+// per-package folder, so Explorer ("Open folder") would show the user an empty directory.
 std::wstring TrackingDirectory() {
-    wchar_t buffer[MAX_PATH]{};
-    DWORD length = GetEnvironmentVariableW(L"LOCALAPPDATA", buffer, MAX_PATH);
-    std::wstring directory = length > 0 ? std::wstring(buffer, length) : L"C:\\ProgramData";
-    directory += L"\\Dock-Debug\\tracking";
-    CreateDirectoryW((directory.substr(0, directory.find_last_of(L'\\'))).c_str(), nullptr);
+    std::wstring directory = L"C:\\ProgramData";
+    PWSTR documents = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_CREATE, nullptr, &documents))) {
+        directory = documents;
+    }
+    CoTaskMemFree(documents);
+    directory += L"\\Dock-Debug";
+    CreateDirectoryW(directory.c_str(), nullptr);
+    directory += L"\\tracking";
     CreateDirectoryW(directory.c_str(), nullptr);
     return directory;
 }
@@ -218,8 +228,6 @@ Every log file repeats its capture time and the Windows version in its header.
 - One tracking session is `started`, then zero or more `change`, then `stopped`. A session without a
   `stopped` file means the app was closed or crashed, or was still running when the folder was zipped;
   Dock-Debug does not write a file when it exits. Nothing is recorded between sessions.
-- Files named `monitor-debug.log` or `usb-tree-debug.log`, if present, come from older versions of this tool
-  (then called TB-Debug) that appended every event to one file (with `YYYY-M-D H:M:S | ` timestamps and possibly truncated text).
 
 To see what changed, diff consecutive files of the same tracker, starting with the `started` file.
 

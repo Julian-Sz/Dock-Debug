@@ -18,9 +18,10 @@ an AI for analysis.
 - `src/report.h/.cpp`: UI-independent logic shared by both front ends: device classification
   (`IsThunderbolt`, `IsUsbFamily`), change signatures, `FormatLive` (snapshot text), and
   `WriteTrackingLog`, which writes one UTF-8 file per tracking event plus `about-dock-debug-logs.md` into
-  `%LOCALAPPDATA%\Dock-Debug\tracking\`.
-- `winui/`: the main app, WinUI 3 / Windows App SDK 2.5.1, C++/WinRT, **unpackaged** (plain .exe,
-  `WindowsPackageType=None`, uses the installed Windows App Runtime). `MainWindow.xaml(.cpp)` holds all UI:
+  `Documents\Dock-Debug\tracking\`.
+- `winui/`: the main app, WinUI 3 / Windows App SDK 2.5.1, C++/WinRT, packaged as **MSIX** for the
+  Microsoft Store (`Package.appxmanifest` holds the Partner Center identity; Store ID 9MSPPCP4HLL5).
+  `/p:WindowsPackageType=None` builds it unpackaged instead. `MainWindow.xaml(.cpp)` holds all UI:
   Mica, TitleBar, NavigationView with Live view and Tracking pages. `DeviceNodeItem` is a bindable class
   used as TreeView node content.
 - `src/main.cpp`: older plain Win32/GDI dashboard, built by CMake. Still compiles and shares `report.cpp`,
@@ -28,8 +29,10 @@ an AI for analysis.
   WM_COMMAND/WM_NOTIFY to STATIC container windows that do not forward them.
 - `src/service_main.cpp`: Windows Service stub (captures snapshots, logs counts to
   `C:\ProgramData\Dock-Debug\monitor.log`). Not installed or wired to the UI.
-- `tools/make-icon.ps1`: generates `winui/Assets/DockDebug.ico` (Feather Icons "zap", MIT; see
-  `THIRD-PARTY-NOTICES.md`).
+- `tools/make-icon.ps1`: generates `winui/Assets/DockDebug.ico` and all MSIX logo PNGs in `winui/Assets/`
+  (Feather Icons "zap", MIT; see `THIRD-PARTY-NOTICES.md`). Edit the script, not the PNGs.
+- `tools/make-store-package.ps1`: builds Release x64 + ARM64 MSIX packages and bundles them into
+  `winui/AppPackages/DockDebug_<version>_x64_arm64.msixupload` for Partner Center.
 
 ## Runtime behavior
 
@@ -46,12 +49,16 @@ WinUI app (main):
 
 ```powershell
 msbuild winui\DockDebug.vcxproj -t:restore -p:RestorePackagesConfig=true   # first time: NuGet packages into winui\packages
-msbuild winui\DockDebug.vcxproj /p:Configuration=Debug /p:Platform=x64
+msbuild winui\DockDebug.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:WindowsPackageType=None
 .\winui\x64\Debug\DockDebug\DockDebug.exe
 ```
 
-Requires Visual Studio 2026 (v145 toolset) with the C++ and Windows App SDK workloads, and the Windows App
-Runtime 2.5 on the machine that runs the app.
+Requires Visual Studio 2026 (v145 toolset) with the C++ and Windows App SDK workloads. The unpackaged
+build needs the Windows App Runtime 2.5 installed. Without `/p:WindowsPackageType=None` the build is
+packaged: the .exe cannot be started directly (run it from Visual Studio with Developer Mode on).
+
+Store upload: `powershell -ExecutionPolicy Bypass -File tools\make-store-package.ps1`. Raise `Version` in
+`winui/Package.appxmanifest` before each submission (fourth number stays 0).
 
 Win32 dashboard and service (CMake):
 
@@ -70,6 +77,10 @@ cmake --build build --config Debug
   `MainWindow::InitializeComponent` override.
 - Freshly built, unsigned executables may be blocked by Smart App Control ("An application control policy
   has blocked this file").
+- Logs go to Documents, not `%LOCALAPPDATA%`: in the MSIX package, AppData writes are redirected to a
+  per-package folder, so "Open folder" in Explorer would show an empty directory.
+- Switching between packaged and unpackaged builds reuses the same output folders; if a build behaves
+  oddly afterwards, delete `winui\x64`, `winui\ARM64` and `winui\DockDebug`.
 - The log format is consumed by AI tools. If you change `FormatLive`, signatures or file naming, update the
   about-file text in `src/report.cpp` in the same change.
 
@@ -77,4 +88,3 @@ cmake --build build --config Debug
 
 - Named-pipe IPC so the service can track while no UI is open (a GUI cannot run in Session 0).
 - A "what changed" diff section at the top of each `change` log file.
-- Code signing / MSIX packaging for distribution.

@@ -6,6 +6,7 @@ winui/ARM64/
 winui/obj/
 winui/DockDebug/
 winui/Generated Files/
+winui/AppPackages/
 
 # NuGet packages (restore with: msbuild winui\DockDebug.vcxproj -t:restore -p:RestorePackagesConfig=true)
 winui/packages/
@@ -14,8 +15,3 @@ winui/packages/
 .vs/
 *.user
 *.suo
-
-# Scratch / diagnostics
-winui-probe/
-winui-*.log
-winui-preprocessed.xml
