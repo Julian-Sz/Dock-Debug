@@ -1,0 +1,2 @@
+// Application icon: used by Explorer, taskbar pins and (via WM_SETICON in MainWindow) the running window.
+1 ICON "Assets\\DockDebug.ico"

@@ -1,0 +1,13 @@
+namespace DockDebug
+{
+    // Content of one node in the USB / Thunderbolt TreeView.
+    [bindable]
+    [default_interface]
+    runtimeclass DeviceNodeItem
+    {
+        DeviceNodeItem(String label, String glyph, String instanceId);
+        String Label{ get; };
+        String Glyph{ get; };
+        String InstanceId{ get; };
+    }
+}

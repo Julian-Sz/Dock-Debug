@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="DockDebug.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Dock-Debug">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar x:Name="AppTitleBar"
+                  Title="Dock-Debug"
+                  Subtitle="Dock diagnostics"
+                  IsPaneToggleButtonVisible="True"
+                  PaneToggleRequested="OnPaneToggleRequested" />
+        <!-- The title bar icon (Feather "zap") is set in MainWindow::SetTitleBarIconAsync. -->
+
+        <NavigationView x:Name="RootNavigation"
+                        Grid.Row="1"
+                        IsBackButtonVisible="Collapsed"
+                        IsPaneToggleButtonVisible="False"
+                        IsSettingsVisible="False"
+                        OpenPaneLength="240"
+                        SelectionChanged="OnNavigationChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Live view" Tag="live">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7F4;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Tracking" Tag="tracking">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D9;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <!-- ============================ Live view ============================ -->
+                <Grid x:Name="LivePage" Padding="36,24,36,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Live view" Style="{StaticResource TitleTextBlockStyle}" />
+                        <ProgressRing x:Name="ScanProgress" Grid.Column="1" Width="16" Height="16"
+                                      IsActive="False" VerticalAlignment="Center" />
+                        <TextBlock x:Name="LastUpdatedText" Grid.Column="2" VerticalAlignment="Center"
+                                   Style="{StaticResource SecondaryCaptionStyle}" />
+                        <Button x:Name="RefreshButton" Grid.Column="3" Click="OnRefreshClicked"
+                                ToolTipService.ToolTip="Capture a new hardware snapshot now">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                                <TextBlock Text="Refresh" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <InfoBar x:Name="LiveStatus" Grid.Row="1" Margin="0,16,0,0"
+                             IsOpen="True" IsClosable="False" Severity="Informational"
+                             Title="Scanning connected hardware" Message="Capturing the first snapshot…" />
+
+                    <TextBlock Grid.Row="2" Text="Displays" Style="{StaticResource SectionHeaderStyle}" />
+                    <ScrollViewer Grid.Row="3" MaxHeight="260" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="DisplayPanel" Spacing="4" />
+                    </ScrollViewer>
+
+                    <TextBlock Grid.Row="4" Text="USB and Thunderbolt devices" Style="{StaticResource SectionHeaderStyle}" />
+                    <Grid Grid.Row="5" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="11*" />
+                            <ColumnDefinition Width="9*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="4,8,4,8">
+                            <Grid>
+                                <TreeView x:Name="DeviceTree" SelectionMode="Single"
+                                          SelectionChanged="OnDeviceSelectionChanged">
+                                    <TreeView.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <FontIcon Glyph="{Binding Content.Glyph}" FontSize="16" />
+                                                <TextBlock Text="{Binding Content.Label}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </TreeView.ItemTemplate>
+                                </TreeView>
+                                <TextBlock x:Name="DeviceTreeEmpty" Visibility="Collapsed" Margin="12"
+                                           Style="{StaticResource SecondaryBodyStyle}" TextWrapping="Wrap"
+                                           Text="No USB, USB4 or Thunderbolt devices were found." />
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Padding="20,16,12,16">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+                                <StackPanel x:Name="DeviceDetailsPanel" Spacing="12">
+                                    <TextBlock Style="{StaticResource SecondaryBodyStyle}" TextWrapping="Wrap"
+                                               Text="Select a USB, USB4, or Thunderbolt device to inspect its details." />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- ============================ Tracking ============================ -->
+                <ScrollViewer x:Name="TrackingPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Padding="36,24,36,24" MaxWidth="1000" HorizontalAlignment="Stretch">
+                        <TextBlock Text="Tracking" Style="{StaticResource TitleTextBlockStyle}" />
+
+                        <InfoBar x:Name="TrackingStatus" Margin="0,16,0,0"
+                                 IsOpen="True" IsClosable="False" Severity="Informational"
+                                 Title="Tracking is off" />
+
+                        <TextBlock Text="Trackers" Style="{StaticResource SectionHeaderStyle}" />
+                        <StackPanel Spacing="4">
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE7F4;" FontSize="20" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Monitor tracking" Style="{StaticResource BodyTextBlockStyle}" />
+                                        <TextBlock Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                                   Text="Saves a new snapshot file to the log folder whenever the display configuration changes." />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="MonitorToggle" Grid.Column="2" IsEnabled="False"
+                                                  MinWidth="0" VerticalAlignment="Center"
+                                                  Toggled="OnMonitorToggled" />
+                                </Grid>
+                            </Border>
+
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE88E;" FontSize="20" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="USB tree tracking" Style="{StaticResource BodyTextBlockStyle}" />
+                                        <TextBlock Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                                   Text="Saves a new snapshot file to the log folder whenever a USB, USB4 or Thunderbolt device appears, disappears or changes state." />
+                                    </StackPanel>
+                                    <ToggleSwitch x:Name="UsbToggle" Grid.Column="2" IsEnabled="False"
+                                                  MinWidth="0" VerticalAlignment="Center"
+                                                  Toggled="OnUsbToggled" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Text="Logs" Style="{StaticResource SectionHeaderStyle}" />
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE8B7;" FontSize="20" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Log folder" Style="{StaticResource BodyTextBlockStyle}" />
+                                    <TextBlock x:Name="LogFolderText" Style="{StaticResource SecondaryCaptionStyle}"
+                                               TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Content="Open folder" VerticalAlignment="Center"
+                                        Click="OnOpenLogFolder" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>
