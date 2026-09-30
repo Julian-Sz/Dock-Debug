@@ -68,7 +68,8 @@ Switch tracking off when you are done. The logs stay in the folder until you del
 - Your problem markers and the notes you typed into them.
 
 No files, passwords or personal documents, and nothing is sent anywhere: the logs only leave your PC when
-you share them. They are plain text files, so have a look before sharing if you are unsure.
+you share them. They are plain text files, so have a look before sharing if you are unsure. See also the
+[privacy policy](https://julian-sz.github.io/Dock-Debug/privacy.html).
 
 ## Requirements
 

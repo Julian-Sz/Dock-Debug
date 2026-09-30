@@ -26,6 +26,9 @@ network access and never sends data anywhere.
   holds all UI: Mica, TitleBar, NavigationView with the Live view, Tracking, Topology and System pages.
   `DeviceNodeItem` is the bindable TreeView node content. NuGet packages are referenced component by
   component (no Windows App SDK metapackage) in `packages.config`.
+- `docs/`: served by GitHub Pages (branch `main`, folder `/docs`). `docs/privacy.md` is the privacy policy
+  linked from the Store listing (`https://julian-sz.github.io/Dock-Debug/privacy.html`); keep it in line with
+  what the app actually records.
 - `tools/make-icon.ps1`: generates `winui/Assets/DockDebug.ico` and all MSIX logo PNGs (Feather Icons
   "zap", MIT; see `THIRD-PARTY-NOTICES.md`). Edit the script, not the PNGs.
 - `tools/make-store-package.ps1`: builds Release x64 + ARM64 and bundles them into
