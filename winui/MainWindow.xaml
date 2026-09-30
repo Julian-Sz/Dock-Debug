@@ -170,7 +170,7 @@
                                                    Text="Saves a new snapshot file to the log folder whenever the display configuration changes." />
                                     </StackPanel>
                                     <ToggleSwitch x:Name="MonitorToggle" Grid.Column="2" IsEnabled="False"
-                                                  MinWidth="0" VerticalAlignment="Center"
+                                                  MinWidth="0" VerticalAlignment="Center" OnContent="On" OffContent="Off"
                                                   Toggled="OnMonitorToggled" />
                                 </Grid>
                             </Border>
@@ -189,7 +189,7 @@
                                                    Text="Saves a new snapshot file to the log folder whenever a USB, USB4 or Thunderbolt device, or a device connected through one (for example a dock's network adapter), appears, disappears or changes state." />
                                     </StackPanel>
                                     <ToggleSwitch x:Name="UsbToggle" Grid.Column="2" IsEnabled="False"
-                                                  MinWidth="0" VerticalAlignment="Center"
+                                                  MinWidth="0" VerticalAlignment="Center" OnContent="On" OffContent="Off"
                                                   Toggled="OnUsbToggled" />
                                 </Grid>
                             </Border>

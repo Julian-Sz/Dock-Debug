@@ -693,6 +693,8 @@ namespace winrt::DockDebug::implementation
         LiveMarkerButton().IsEnabled(!m_marking);
         if (!tracking) {
             MarkerStatus().Text(L"Switch on tracking to mark problems.");
+        } else if (std::wstring_view(MarkerStatus().Text()).rfind(L"Switch on tracking", 0) == 0) {
+            MarkerStatus().Text(L"A marker saves a fresh snapshot and the recent Windows events into the current session.");
         }
 
         auto status = TrackingStatus();
