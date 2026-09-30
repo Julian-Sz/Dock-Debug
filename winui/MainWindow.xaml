@@ -13,6 +13,9 @@
     </Window.SystemBackdrop>
 
     <Grid>
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Modifiers="Control" Key="M" Invoked="OnMarkAccelerator" />
+        </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -43,6 +46,16 @@
                         <FontIcon Glyph="&#xE9D9;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Topology" Tag="topology">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D2;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="System" Tag="system">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE770;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Grid>
@@ -63,7 +76,15 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
+                        <Button x:Name="LiveMarkerButton" Grid.Column="4" Visibility="Collapsed" Click="OnMarkProblem"
+                                ToolTipService.ToolTip="Mark the moment a problem happened (Ctrl+M)">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE7C1;" FontSize="14" />
+                                <TextBlock Text="Mark problem" />
+                            </StackPanel>
+                        </Button>
                         <TextBlock Text="Live view" Style="{StaticResource TitleTextBlockStyle}" />
                         <ProgressRing x:Name="ScanProgress" Grid.Column="1" Width="16" Height="16"
                                       IsActive="False" VerticalAlignment="Center" />
@@ -165,7 +186,7 @@
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="USB tree tracking" Style="{StaticResource BodyTextBlockStyle}" />
                                         <TextBlock Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
-                                                   Text="Saves a new snapshot file to the log folder whenever a USB, USB4 or Thunderbolt device appears, disappears or changes state." />
+                                                   Text="Saves a new snapshot file to the log folder whenever a USB, USB4 or Thunderbolt device, or a device connected through one (for example a dock's network adapter), appears, disappears or changes state." />
                                     </StackPanel>
                                     <ToggleSwitch x:Name="UsbToggle" Grid.Column="2" IsEnabled="False"
                                                   MinWidth="0" VerticalAlignment="Center"
@@ -173,6 +194,28 @@
                                 </Grid>
                             </Border>
                         </StackPanel>
+
+                        <TextBlock Text="Mark a problem" Style="{StaticResource SectionHeaderStyle}" />
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE7C1;" FontSize="20" VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"
+                                               Text="When something goes wrong (a monitor goes black, the dock disconnects…), mark the moment. Shortcut: Ctrl+M." />
+                                    <TextBox x:Name="MarkerNote" PlaceholderText="What happened? (optional)" />
+                                    <TextBlock x:Name="MarkerStatus" Style="{StaticResource SecondaryCaptionStyle}"
+                                               TextWrapping="Wrap" Text="Switch on tracking to mark problems." />
+                                </StackPanel>
+                                <Button x:Name="MarkerButton" Grid.Column="2" Content="Mark problem" IsEnabled="False"
+                                        Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Center"
+                                        Click="OnMarkProblem" />
+                            </Grid>
+                        </Border>
 
                         <TextBlock Text="Logs" Style="{StaticResource SectionHeaderStyle}" />
                         <Border Style="{StaticResource CardBorderStyle}">
@@ -192,6 +235,94 @@
                                         Click="OnOpenLogFolder" />
                             </Grid>
                         </Border>
+                        <TextBlock Margin="1,8,0,0" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                   Text="Each recording (s1, s2, …) starts with a session info file (computer, power settings, 30-day crash and update history, recent Windows events). Change files list what changed and the Windows events since the previous file. Tracking runs only while this window is open; minimizing is fine, closing ends it." />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ============================ Topology ============================ -->
+                <ScrollViewer x:Name="TopologyPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Padding="36,24,36,24" MaxWidth="1100" HorizontalAlignment="Stretch">
+                        <TextBlock Text="Topology" Style="{StaticResource TitleTextBlockStyle}" />
+
+                        <InfoBar Margin="0,16,0,0" IsOpen="True" IsClosable="False" Severity="Informational"
+                                 Title="What this page can show"
+                                 Message="How your devices are physically connected, and the speed each USB connection negotiated. That is the maximum of a connection, not how much it uses: Windows reports neither the live traffic of USB devices nor how a Thunderbolt / USB4 link divides its bandwidth between displays, USB and PCIe. Windows shows the current Thunderbolt / USB4 link bandwidth in the Settings app under USB › USB4 hubs and devices.">
+                            <InfoBar.ActionButton>
+                                <Button Content="Open USB settings" Click="OnOpenUsbSettings" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+
+                        <TextBlock Text="USB4 / Thunderbolt" Style="{StaticResource SectionHeaderStyle}" />
+                        <StackPanel x:Name="RoutersPanel" Spacing="4" />
+
+                        <TextBlock Text="USB connections" Style="{StaticResource SectionHeaderStyle}" />
+                        <TextBlock Margin="1,0,0,8" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                   Text="Every device with the port it uses and the speed it negotiated. A hub's upstream connection is shared by everything below it. Devices behind a USB4 / Thunderbolt dock appear under the USB controller that tunnels their USB traffic." />
+                        <StackPanel x:Name="UsbTopologyPanel" Spacing="4" />
+
+                        <TextBlock Text="Displays (estimated bandwidth)" Style="{StaticResource SectionHeaderStyle}" />
+                        <TextBlock Margin="1,0,0,8" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                   Text="Calculated from each output's pixel clock and color depth, uncompressed. With DSC compression the real rate is lower. Windows does not say which monitor runs through which dock or cable." />
+                        <StackPanel x:Name="DisplayBandwidthPanel" Spacing="4" />
+
+                        <TextBlock Text="Live throughput" Style="{StaticResource SectionHeaderStyle}" />
+                        <TextBlock Margin="1,0,0,8" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                   Text="Measured every 2 seconds while this page is open. Network adapters and drives are the only devices Windows counts traffic for." />
+                        <StackPanel x:Name="TrafficPanel" Spacing="4" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ============================ System ============================ -->
+                <ScrollViewer x:Name="SystemPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Padding="36,24,36,24" MaxWidth="1000" HorizontalAlignment="Stretch">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="System" Style="{StaticResource TitleTextBlockStyle}" />
+                            <ProgressRing x:Name="SystemProgress" Grid.Column="1" Width="16" Height="16"
+                                          IsActive="False" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SystemUpdatedText" Grid.Column="2" VerticalAlignment="Center"
+                                       Style="{StaticResource SecondaryCaptionStyle}" />
+                            <Button x:Name="SystemRefreshButton" Grid.Column="3" Click="OnSystemRefreshClicked"
+                                    ToolTipService.ToolTip="Read the power settings and Windows events again">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                                    <TextBlock Text="Refresh" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <InfoBar x:Name="PowerHint" Margin="0,16,0,0" IsOpen="False" IsClosable="False"
+                                 Severity="Warning" Title="USB selective suspend is on"
+                                 Message="Windows may power down idle USB devices, a common cause of dock and USB dropouts. To test without it: Control Panel › Power Options › Change plan settings › Change advanced power settings › USB settings." />
+
+                        <InfoBar x:Name="DrainHint" Margin="0,8,0,0" IsOpen="False" IsClosable="False"
+                                 Severity="Warning" Title="The battery drains although the computer is on AC power"
+                                 Message="The power supply (often a USB-C or Thunderbolt dock) delivers less than the computer uses. Docks that cannot supply enough power are a common cause of disconnects under load." />
+
+                        <InfoBar x:Name="CrashHint" Margin="0,8,0,0" IsOpen="False" IsClosable="False"
+                                 Severity="Error" Title="Windows recorded blue screens or driver hangs in the last 30 days" />
+
+                        <TextBlock Text="Computer" Style="{StaticResource SectionHeaderStyle}" />
+                        <StackPanel x:Name="ComputerPanel" />
+
+                        <TextBlock Text="Power" Style="{StaticResource SectionHeaderStyle}" />
+                        <StackPanel x:Name="PowerPanel" />
+
+                        <TextBlock Text="Reliability (last 30 days)" Style="{StaticResource SectionHeaderStyle}" />
+                        <TextBlock Margin="1,0,0,8" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                   Text="Blue screens, driver hangs, unexpected shutdowns, driver installs and Windows Update results. Counts are reports: Windows may report one crash several times." />
+                        <StackPanel x:Name="ReliabilityPanel" />
+
+                        <TextBlock Text="Windows events (last 24 hours)" Style="{StaticResource SectionHeaderStyle}" />
+                        <TextBlock Margin="1,0,0,8" Style="{StaticResource SecondaryCaptionStyle}" TextWrapping="Wrap"
+                                   Text="Device, USB, display, power and hardware error events from the Windows event logs, newest first. Tracking writes these into the log files too." />
+                        <StackPanel x:Name="EventsPanel" Spacing="4" />
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "MainWindow.g.h"
-#include "../src/monitor.h"
+#include "../src/report.h"
 
+#include <map>
 #include <string>
 
 namespace winrt::DockDebug::implementation
@@ -22,6 +23,11 @@ namespace winrt::DockDebug::implementation
         void OnMonitorToggled(Windows::Foundation::IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
         void OnUsbToggled(Windows::Foundation::IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
         void OnOpenLogFolder(Windows::Foundation::IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
+        void OnSystemRefreshClicked(Windows::Foundation::IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
+        void OnMarkProblem(Windows::Foundation::IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
+        void OnOpenUsbSettings(Windows::Foundation::IInspectable const&, Microsoft::UI::Xaml::RoutedEventArgs const&);
+        void OnMarkAccelerator(Microsoft::UI::Xaml::Input::KeyboardAccelerator const&,
+                               Microsoft::UI::Xaml::Input::KeyboardAcceleratorInvokedEventArgs const&);
 
     private:
         static LRESULT CALLBACK DeviceChangeSubclass(HWND window, UINT message, WPARAM wParam, LPARAM lParam,
@@ -37,6 +43,11 @@ namespace winrt::DockDebug::implementation
         void UpdateLiveStatus();
         void UpdateTrackingStatus();
         void CheckTracking();
+        void SetTracking(Tracker tracker, bool on);
+        winrt::fire_and_forget RefreshSystemAsync();
+        winrt::fire_and_forget MarkProblemAsync();
+        void RebuildTopology();
+        winrt::fire_and_forget RefreshTrafficAsync();
         void Shutdown();
 
         HWND m_hwnd = nullptr;
@@ -56,9 +67,24 @@ namespace winrt::DockDebug::implementation
 
         bool m_trackingMonitor = false;
         bool m_trackingUsb = false;
-        std::wstring m_previousMonitorSignature;
-        std::wstring m_previousUsbSignature;
+        TrackingSession m_session;  // valid while a tracker is on
+        TrackerBaseline m_monitorBaseline;
+        TrackerBaseline m_usbBaseline;
         std::wstring m_lastLoggedChange;
+
+        bool m_systemLoading = false;
+        bool m_marking = false;
+
+        // Topology page: rebuilt when the snapshot changes while it is visible; traffic polled every 2 s.
+        std::wstring m_renderedTopologySignature;
+        Microsoft::UI::Dispatching::DispatcherQueueTimer m_trafficTimer{ nullptr };
+        bool m_trafficLoading = false;
+        struct TrafficSample {
+            unsigned long long time = 0;  // UTC FILETIME units
+            unsigned long long received = 0;
+            unsigned long long sent = 0;
+        };
+        std::map<std::wstring, TrafficSample> m_trafficPrevious;
     };
 }
 

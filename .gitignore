@@ -1,12 +1,12 @@
 # Build output
-build/
-build-*/
 winui/x64/
 winui/ARM64/
 winui/obj/
 winui/DockDebug/
 winui/Generated Files/
 winui/AppPackages/
+tests/UnitTests/x64/
+tests/UnitTests/ARM64/
 
 # NuGet packages (restore with: msbuild winui\DockDebug.vcxproj -t:restore -p:RestorePackagesConfig=true)
 winui/packages/

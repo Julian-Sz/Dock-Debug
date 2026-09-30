@@ -50,6 +50,22 @@
                 <Setter Property="BorderBrush" Value="{ThemeResource AccentFillColorDefaultBrush}" />
             </Style>
 
+            <Style x:Key="CautionTagBorderStyle" TargetType="Border" BasedOn="{StaticResource TagBorderStyle}">
+                <Setter Property="Background" Value="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+            </Style>
+
+            <Style x:Key="CriticalTagBorderStyle" TargetType="Border" BasedOn="{StaticResource TagBorderStyle}">
+                <Setter Property="Background" Value="{ThemeResource SystemFillColorCriticalBackgroundBrush}" />
+            </Style>
+
+            <Style x:Key="CautionTagTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+            </Style>
+
+            <Style x:Key="CriticalTagTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+            </Style>
+
             <Style x:Key="TagTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
             </Style>
